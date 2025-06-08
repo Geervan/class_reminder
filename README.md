@@ -15,7 +15,7 @@ A flutter app, which vibrates your phone at a time input by the user classfied a
 It is a Personal App so it has my name a lot, kindly ignore it
 # Images
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/574e9544-8239-4e72-bfdb-d52015472fe9" width="400" style="display: inline-block; margin: 0 10px;">
+  <img src="https://github.com/user-attachments/assets/574e9544-8239-4e72-bfdb-d52015472fe9" width="300" style="display: inline-block; margin: 0 10px;">
   <img src="https://github.com/user-attachments/assets/65c7d4de-b342-4ae2-9318-a70ae872cecd" width="400" style="display: inline-block; margin: 0 10px;">
 </div>
 
