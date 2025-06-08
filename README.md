@@ -1,16 +1,17 @@
-# time_table_app
+# Class Reminder App
 
-A new Flutter project.
+A flutter app, which vibrates your phone at a time input by the user classfied as the class end time, the vibration continues until all the items you brought along are checked off, Items are also input by the user
 
-## Getting Started
+## Steps to use:
+- A beauttiful home page with a splash screen
+- Navigate to the main page, notice the day is automatically selected for you
+- Add class end timings and items you have taken along with you to class {Can add multiple class ending times}
+- Reduce the app to background tray
+# Features
+- Uses shared_preference as a local storage option, so the data stays
+- You can add times and items for the days ahead
+- Automatically unchecks the previous day's items on the next day cycle (i.e next week)
+- Vibrates 10 mins post your class time [Given that the app is open on screen] and ~30ish seconds if the app is in background due to os restrictions
+  # It is a Personal App so it has my name a lot, kindly ignore it
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
