@@ -12,6 +12,10 @@ A flutter app, which vibrates your phone at a time input by the user classfied a
 - You can add times and items for the days ahead
 - Automatically unchecks the previous day's items on the next day cycle (i.e next week)
 - Vibrates 10 mins post your class time [Given that the app is open on screen] and ~30ish seconds if the app is in background due to os restrictions
-  # It is a Personal App so it has my name a lot, kindly ignore it
+It is a Personal App so it has my name a lot, kindly ignore it
+# Images
+![image](https://github.com/user-attachments/assets/574e9544-8239-4e72-bfdb-d52015472fe9)
+![image](https://github.com/user-attachments/assets/65c7d4de-b342-4ae2-9318-a70ae872cecd)
+
 
 
