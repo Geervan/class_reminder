@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:convert'; // --- NEW ---: Needed for converting data to/from JSON
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:vibration/vibration.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'package:shared_preferences/shared_preferences.dart'; // --- NEW ---
+import 'package:shared_preferences/shared_preferences.dart';
 
 // --- No changes in this class ---
 class NotificationService {
@@ -109,12 +109,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   String _deviceTimeZone = 'Asia/Kolkata';
   final NotificationService _notificationService = NotificationService();
 
-  // --- UPDATED: initState now calls _loadData ---
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // The _initApp sequence is now slightly different
     _loadData().then((_) {
       _initApp();
     });
@@ -142,19 +140,16 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  // --- UPDATED: Startup logic ---
   Future<void> _initApp() async {
     await _initTimeZoneAndNotifications();
     _autoSelectCurrentDay();
-    _resetTodaysItemsIfNecessary(); // --- NEW ---: Unchecks items for the new day
+    _resetTodaysItemsIfNecessary();
     _rescheduleAllNotifications();
     _startPeriodicCheck();
   }
 
-  // --- NEW ---: Functions to save data to phone storage
   Future<void> _saveData() async {
     final prefs = await SharedPreferences.getInstance();
-    // Convert maps to JSON strings before saving
     final String classEndTimesJson = json.encode(classEndTimes);
     final String itemsJson = json.encode(items);
     await prefs.setString('classEndTimes', classEndTimesJson);
@@ -162,23 +157,19 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     debugPrint("Data saved!");
   }
 
-  // --- NEW ---: Functions to load data from phone storage
   Future<void> _loadData() async {
     final prefs = await SharedPreferences.getInstance();
     final String? classEndTimesJson = prefs.getString('classEndTimes');
     final String? itemsJson = prefs.getString('items');
 
     if (classEndTimesJson != null) {
-      // Convert JSON string back to a Map
       final decodedMap = json.decode(classEndTimesJson) as Map<String, dynamic>;
-      // Ensure the lists are of the correct type
       classEndTimes = decodedMap.map(
         (key, value) => MapEntry(key, List<String>.from(value)),
       );
     }
     if (itemsJson != null) {
       final decodedMap = json.decode(itemsJson) as Map<String, dynamic>;
-      // This conversion is a bit more complex due to the nested map
       items = decodedMap.map((key, value) {
         final itemList =
             (value as List)
@@ -188,23 +179,20 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       });
     }
 
-    // Use setState to update the UI with the loaded data
     if (mounted) {
       setState(() {});
     }
     debugPrint("Data loaded!");
   }
 
-  // --- NEW ---: Logic to uncheck items at the start of a new day
   Future<void> _resetTodaysItemsIfNecessary() async {
     final prefs = await SharedPreferences.getInstance();
     final String todayString = DateTime.now().toIso8601String().substring(
       0,
       10,
-    ); // e.g., "2024-05-24"
+    );
     final String? lastResetDay = prefs.getString('lastResetDay');
 
-    // If it's a new day, reset the items for today
     if (lastResetDay != todayString) {
       final todayKey = days[DateTime.now().weekday - 1];
       if (items[todayKey] != null) {
@@ -212,13 +200,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           item['checked'] = false;
         }
         debugPrint("Resetting items for $todayKey.");
-        await _saveData(); // Save the newly unchecked items
-        await prefs.setString(
-          'lastResetDay',
-          todayString,
-        ); // Remember we reset today
-
-        // Update UI to show the unchecked items
+        await _saveData();
+        await prefs.setString('lastResetDay', todayString);
         if (mounted) {
           setState(() {});
         }
@@ -226,7 +209,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
-  // --- All functions below this line are mostly the same, but now call _saveData() ---
+  // --- Functions below are mostly unchanged, except for adding/handling items ---
 
   Future<void> _initTimeZoneAndNotifications() async {
     try {
@@ -398,7 +381,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     _stopVibration();
   }
 
-  // --- UPDATED to call _saveData() ---
   void _showManualTimeDialog() {
     hourController.clear();
     minuteController.clear();
@@ -465,7 +447,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                   final currentDay = days[selectedDayIndex];
                   setState(() {
                     classEndTimes[currentDay]!.add(formattedTime);
-                    _saveData(); // --- NEW ---
+                    _saveData();
                   });
                   _scheduleNotificationFor(currentDay, formattedTime);
                   Navigator.of(context).pop();
@@ -485,8 +467,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
-  // --- UPDATED to call _saveData() ---
-  void _addItem() {
+  // --- UPDATED: This function now takes the context to pop the bottom sheet ---
+  void _addItem(BuildContext sheetContext) {
     if (itemController.text.trim().isNotEmpty) {
       setState(() {
         final selectedDay = days[selectedDayIndex];
@@ -494,11 +476,76 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           'text': itemController.text.trim(),
           'checked': false,
         });
-        itemController.clear();
-        _saveData(); // --- NEW ---
+        _saveData();
       });
+      itemController.clear();
+      Navigator.pop(sheetContext); // Close the bottom sheet
       _checkClassEndTimesAndVibrate();
     }
+  }
+
+  // --- NEW: Function to display the modal bottom sheet for adding an item ---
+  void _showAddItemSheet() {
+    showModalBottomSheet(
+      context: context,
+      // This makes the sheet sit above the keyboard
+      isScrollControlled: true,
+      // For rounded corners
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          // This padding adjusts the sheet's content based on the keyboard's height
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Add New Item',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: itemController,
+                  // Automatically focuses the field and brings up the keyboard
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: 'Item Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onSubmitted: (_) => _addItem(sheetContext),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.cyan,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 50,
+                      vertical: 15,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () => _addItem(sheetContext),
+                  child: const Text(
+                    'Add Item',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -606,7 +653,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                         times
                             .map(
                               (time) => Card(
-                                color: Color(0xFFF0F8FF),
+                                color: const Color(0xFFF0F8FF),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -626,7 +673,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                                         _notificationService.cancelNotification(
                                           notificationId,
                                         );
-                                        _saveData(); // --- NEW ---
+                                        _saveData();
                                         debugPrint(
                                           'Cancelled notification for $selectedDay at $time',
                                         );
@@ -639,52 +686,29 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                             .toList(),
                   ),
               const SizedBox(height: 20),
+              // --- UPDATED: This section is now cleaner, just a title and a button ---
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     "Items to bring:",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: itemController,
-                      onSubmitted: (_) => _addItem(),
-                      decoration: InputDecoration(
-                        hintText: "Add item",
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 16,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(color: Colors.grey.shade400),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(color: Colors.grey.shade400),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                          borderSide: BorderSide(
-                            color: Colors.cyan.shade300,
-                            width: 2,
-                          ),
-                        ),
+                  TextButton.icon(
+                    onPressed: _showAddItemSheet,
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: const Text("Add Item"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.cyan[700],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_circle,
-                      color: Colors.cyan,
-                      size: 30,
-                    ),
-                    onPressed: _addItem,
-                  ),
                 ],
               ),
-              SizedBox(height: 10),
+              // --- End of updated section ---
+              const SizedBox(height: 10),
               Expanded(
                 child:
                     todayItems.isEmpty
@@ -701,16 +725,17 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                             return Material(
                               color: Colors.white,
                               child: Padding(
-                                padding: const EdgeInsets.all(2.0),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
                                 child: ListTile(
-                                  tileColor: Color(0xFFB3E5FC),
+                                  tileColor: const Color(0xFFB3E5FC),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   leading: Checkbox(
                                     value: item['checked'],
                                     activeColor: Colors.cyan,
-
                                     onChanged: (val) {
                                       setState(() {
                                         item['checked'] = val!;
@@ -720,7 +745,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                                             _isVibrating) {
                                           _stopVibration();
                                         }
-                                        _saveData(); // --- NEW ---
+                                        _saveData();
                                       });
                                     },
                                   ),
@@ -731,10 +756,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                                           item['checked']
                                               ? TextDecoration.lineThrough
                                               : null,
-                                      color:
-                                          item['checked']
-                                              ? Colors.black
-                                              : Colors.black,
+                                      color: Colors.black,
                                     ),
                                   ),
                                   trailing: IconButton(
@@ -749,7 +771,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                                             _isVibrating) {
                                           _stopVibration();
                                         }
-                                        _saveData(); // --- NEW ---
+                                        _saveData();
                                       });
                                     },
                                   ),
