@@ -51,7 +51,7 @@ class HomePage extends StatelessWidget {
                           const Padding(
                             padding: EdgeInsets.all(30),
                             child: Text(
-                              "One Stop Solution For All Of Geervan's Remembering Problems",
+                              "One Stop Solution For All Of Remembering Problems",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 20,
@@ -61,14 +61,21 @@ class HomePage extends StatelessWidget {
                           ),
 
                           const Text(
-                            "PS.It Barely Works hehe",
+                            "PS.It Barely Works hehe ",
                             style: TextStyle(
                               color: Colors.grey,
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
                           ),
-
+                          const Text(
+                            "Lost way too many stuff over the time lol",
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
                           // const SizedBox(height: 50),
                           Padding(
                             padding: const EdgeInsets.only(top: 50),
@@ -100,7 +107,7 @@ class HomePage extends StatelessWidget {
                           const Padding(
                             padding: EdgeInsets.only(bottom: 16),
                             child: Text(
-                              "Made with ❤️ by Geervan for Geervan",
+                              "Made with ❤️ by Geervan ",
                               style: TextStyle(
                                 color: Color(0xFF1A1A40),
                                 fontSize: 13,
